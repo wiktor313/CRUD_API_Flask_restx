@@ -5,11 +5,6 @@ from .extensions import db
 
 ns = Namespace("api")
 
-@ns.route("/hello")
-class HelloWorld(Resource):
-    def get(self):
-        return {"message": "Hello, World!"}
-
 @ns.route("/courses")
 class CourseListAPI(Resource):
     @ns.marshal_list_with(course_model)
@@ -31,6 +26,22 @@ class CourseIdAPI(Resource):
     def get(self, id):
         course = Course.query.get_or_404(id)
         return course
+    
+    @ns.expect(cource_input_model)
+    @ns.marshal_with(course_model)
+    def put(self, id):
+        course = Course.query.get_or_404(id)
+        course.name = ns.payload["name"]
+        db.session.commit()
+        return course, 200
+    
+    
+    @ns.response(204, "Course deleted")
+    def delete(self, id):
+        course = Course.query.get_or_404(id)
+        db.session.delete(course)
+        db.session.commit()
+        return "", 204
 
 @ns.route("/students")
 class StudentListAPI(Resource):
